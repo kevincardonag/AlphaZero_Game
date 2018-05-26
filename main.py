@@ -2,10 +2,9 @@ import pygame
 import sys
 import time
 from utils.constants import WIDTH, HIGH, ROWS_NUMBER, COLUMNS_NUMBER, tree_development
-from utils.functions import chessboard
+from utils.functions import chessboard, position_random
 from models.Field import Cursor, Image
 from models.Node import Node
-from random import randint
 from pygame.locals import *
 
 
@@ -18,8 +17,8 @@ class Main(object):
 
     def __init__(self):
         """
-        Autor: Kevin Cardona
-        Fecha: Marzo 6 2018
+        Autor: Carlos Almario
+        Fecha: mayo 10 2018
         Se sobrescribe el init para crear las variables de la clase Main.
         """
 
@@ -43,6 +42,9 @@ class Main(object):
         Autor: Carlos Almario
         Fecha: Mayo 16 2018
         Método para correr la ventana del juego y escuchar los eventos que suceden en ella.
+        las Siglas W corresponde al color White blanco en español indica que alli esta la ficha blanca,
+        la sigla B corresponde al color Black negro en español indica que alli hay una ficha negra en el
+        tablero
         """
 
         c = 0
@@ -81,7 +83,7 @@ class Main(object):
                 button = Image((WIDTH-297)/2, (HIGH-192)/2, "images/button.png")
                 button.draw(self.window)
 
-            # cliclo For que está escuchando los eventos
+            # ciclo For que está escuchando los eventos
             for event in pygame.event.get():
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -96,9 +98,9 @@ class Main(object):
                             bucle que busca en la lista de posibles movimientos si la casilla donde se da cick es un
                             movimiento posible
                             """
-                            for iterator in range(len(possible_movimenents)):
-                                position_list_x = possible_movimenents[iterator][0]
-                                position_list_y = possible_movimenents[iterator][1]
+                            for i in range(len(possible_movimenents)):
+                                position_list_x = possible_movimenents[i][0]
+                                position_list_y = possible_movimenents[i][1]
 
                                 if position_x == position_list_x and position_y == position_list_y:
                                     self.board[position_x][position_y] = 'B'
@@ -117,13 +119,13 @@ class Main(object):
 
     def create_white_horse(self):
         """
-        Autor: Kevin Cardona
+        Autor: Carlos almario
         Fecha: mayo 25 2018
         método encargado de crear el caballo blanco en la matriz
         """
         # ubicacion del caballo blanco
 
-        ramdom_x, ramdom_y = self.position_random(ROWS_NUMBER, COLUMNS_NUMBER)
+        ramdom_x, ramdom_y = position_random(ROWS_NUMBER, COLUMNS_NUMBER)
         if not self.board[ramdom_x][ramdom_y].strip('0'):
             node = Node()
             node.type = 0
@@ -134,12 +136,12 @@ class Main(object):
 
     def create_black_horse(self):
         """
-        Autor: Kevin Cardona
+        Autor: Carlos Almario
         Fecha: mayo 25 2018
         método encargado de crear el caballo negro en la matriz
         """
         # ubicacion del caballlo begro
-        ramdom_x, ramdom_y = self.position_random(ROWS_NUMBER, COLUMNS_NUMBER)
+        ramdom_x, ramdom_y = position_random(ROWS_NUMBER, COLUMNS_NUMBER)
 
         if not self.board[ramdom_x][ramdom_y].strip('0'):
             self.node = Node()
@@ -147,20 +149,6 @@ class Main(object):
             self.node.position_x = ramdom_x
             self.node.position_y = ramdom_y
             self.board[ramdom_x][ramdom_y] = 'B'
-
-    def position_random(self, max_number_x, max_number_y):
-        """
-        Autor: Kevin Cardona
-        Fecha: mayo 25 2018
-        función auxiliar para obtener el ramdon de una posición en la matriz
-        :param max_number_x: máximo numero para x
-        :param max_number_y: máximo numero para y
-        :return: random_x, random_y
-        """
-        random_x = randint(0, max_number_x-1)
-        random_y = randint(0, max_number_y-1)
-
-        return random_x, random_y
 
     def rewrite(self):
 

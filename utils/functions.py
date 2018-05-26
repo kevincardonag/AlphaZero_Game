@@ -1,5 +1,6 @@
 from utils.constants import CHESSBOARD, tree_development
 from models.Node import Node
+from random import randint
 from sys import maxsize
 
 
@@ -30,3 +31,18 @@ def search_black_horse(board):
                 node.position_y = position_y
                 node.type = 1
                 return node
+
+
+def position_random(max_number_x, max_number_y):
+        """
+        Autor: Carlos Almario
+        Fecha: mayo 25 2018
+        función auxiliar para obtener el ramdon de una posición en la matriz
+        :param max_number_x: máximo numero para x
+        :param max_number_y: máximo numero para y
+        :return: random_x, random_y
+        """
+        random_x = randint(0, max_number_x-1)
+        random_y = randint(0, max_number_y-1)
+
+        return random_x, random_y

@@ -1,7 +1,5 @@
 from utils.constants import tree_development
 
-
-
 class Node(object):
     """
     Autor: carlos Almario
@@ -20,9 +18,11 @@ class Node(object):
         self.position_x = 0
         self.position_y = 0
         self.caught_items = 0
-        self.depth = 0
+        self.depth = 8
         self.type = 0
+
         self.moves = [[2, 1], [1, 2], [-2, 1], [2, -1], [-1, 2], [1, -2], [-2, -1], [-1, -2]]
+        self.children = []
 
     def possible_movements(self, chessboard):
         """
