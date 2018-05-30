@@ -1,11 +1,12 @@
 import pygame
 import sys
 import time
-from utils.constants import WIDTH, HIGH, ROWS_NUMBER, COLUMNS_NUMBER, tree_development
-from utils.functions import chessboard, position_random
+from utils.constants import WIDTH, HIGH, ROWS_NUMBER, COLUMNS_NUMBER, nodes_visited
+from utils.functions import chessboard, position_random,search_white_horse
 from models.Field import Cursor, Image
 from models.Node import Node
 from pygame.locals import *
+import threading
 
 
 class Main(object):
@@ -23,7 +24,7 @@ class Main(object):
         """
 
         pygame.init()
-        self.window = pygame.display.set_mode((WIDTH,HIGH))
+        self.window = pygame.display.set_mode((WIDTH, HIGH))
         self.background_window = pygame.Color(202, 118, 34)
         self.background_two_window = pygame.Color(255, 255, 255)
         pygame.display.set_caption("AlphaZero")
@@ -32,10 +33,13 @@ class Main(object):
         self.square_red = pygame.image.load("images/red.png")
         self.white_horse = pygame.image.load("images/white_horse.png")
         self.black_horse = pygame.image.load("images/black_horse.png")
+        self.coin = pygame.image.load("images/coin.png")
         self.cursor = Cursor()
+        self.player = 0
         self.board = chessboard()
         self.node = Node()
         self.run()
+
 
     def run(self):
         """
@@ -75,9 +79,14 @@ class Main(object):
                         if self.board[i][j] == 'B':
                             self.window.blit(self.black_horse, (j * 86, i * 80))
 
-                for iterator in range(len(possible_movimenents)):
-                    self.window.blit(self.square_red,
-                                 (possible_movimenents[iterator][1] * 80, possible_movimenents[iterator][0] * 80))
+                        if self.board[i][j] == 'C':
+                            self.window.blit(self.coin, (j * 86, i * 80))
+
+                for i in range(len(possible_movimenents)):
+                    pos_x, pos_y = possible_movimenents[i][0], possible_movimenents[i][1]
+                    if self.board[pos_x][pos_y] != 'C':
+                        self.window.blit(self.square_red, (pos_y * 80, pos_x * 80))
+
             else:
                 self.window.fill(self.background_two_window)
                 button = Image((WIDTH-297)/2, (HIGH-192)/2, "images/button.png")
@@ -103,14 +112,24 @@ class Main(object):
                                 position_list_y = possible_movimenents[i][1]
 
                                 if position_x == position_list_x and position_y == position_list_y:
-                                    self.board[position_x][position_y] = 'B'
-                                    self.board[self.node.position_x][self.node.position_y] = '0'
-                                    self.node.position_x = position_x
-                                    self.node.position_y = position_y
+                                    if self.player:
+                                        self.board[position_x][position_y] = 'B'
+                                        self.board[self.node.position_x][self.node.position_y] = '0'
+                                        self.node.position_x = position_x
+                                        self.node.position_y = position_y
+                                        self.player = 0
+                                        if not self.player:
+                                            white_horse_node = search_white_horse(self.board)
+                                            thread = threading.Thread(target=self.execute_minimax,
+                                                                      args=(white_horse_node,))
+                                            thread.start()
 
                     if self.cursor.colliderect(button.rect) and not start:
-                        self.create_white_horse()
+                        self.create_coin()
+                        white_horse_node = self.create_white_horse()
                         self.create_black_horse()
+                        thread = threading.Thread(target=self.execute_minimax, args=(white_horse_node,))
+                        thread.start()
                         start = True
 
                 if event.type == QUIT:
@@ -133,6 +152,8 @@ class Main(object):
             node.position_x = ramdom_x
             node.position_y = ramdom_y
             self.board[ramdom_x][ramdom_y] = 'W'
+            print("nodo padre: "+str(node)+"\n")
+            return node
 
     def create_black_horse(self):
         """
@@ -150,6 +171,18 @@ class Main(object):
             self.node.position_y = ramdom_y
             self.board[ramdom_x][ramdom_y] = 'B'
 
+    def create_coin(self):
+        """
+        Autor: Carlos almario
+        Fecha: mayo 25 2018
+        método encargado de crear el caballo blanco en la matriz
+        """
+        # ubicacion del caballo blanco
+        for i in range(6):
+            ramdom_x, ramdom_y = position_random(ROWS_NUMBER, COLUMNS_NUMBER)
+            if not self.board[ramdom_x][ramdom_y].strip('0'):
+                self.board[ramdom_x][ramdom_y] = 'C'
+
     def rewrite(self):
 
         """
@@ -161,6 +194,15 @@ class Main(object):
         pos_y = 10
         image = Image(pos_x, pos_y, 'images/name.png')
         image.draw(self.window)
+
+    def execute_minimax(self, node):
+        node_max = node
+        node_min = self.node
+        best_action, turn = node.minimax(node_max, node_min, 3)
+        self.player = turn
+        print(best_action)
+        self.board[node.position_x][node.position_y] = '0'
+        self.board[best_action.position_x][best_action.position_y] = 'W'
 
 
 main_window = Main()
