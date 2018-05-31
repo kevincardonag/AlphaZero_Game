@@ -84,3 +84,110 @@ def tree(node, board):
     #print("proximo a espandir: "+str(next_node.position_x)+";"+str(next_node.position_y))
     return False, next_node
 
+
+def minimax(node_max, node_min, board, items):
+        """
+        Autor: Carlos Almario
+        Fecha: Mayo 26 2018
+        metodo
+        :param node_max:
+        :param node_min:
+        :param board:
+        :param items:
+        :return:
+        """
+        items = items
+        best_action = None
+        best_utility = maxsize * -1
+        node_max = node_max
+        items_max = 0
+        items_min = 0
+        possible_movements = node_max.possible_movements(board)
+        for i in range(len(possible_movements)):
+            pos_x, pos_y = possible_movements[i][0], possible_movements[i][1]
+            son_node_min = Node()
+            son_node_min.position_x = pos_x
+            son_node_min.position_y = pos_y
+            son_node_min.type = 1
+            son_node_min.node = node_max
+            son_node_min.depth = node_max.depth + 1
+
+            if son_node_min.is_goal(board):
+                son_node_min.value = 40
+                son_node_min.caught_items = son_node_min.node.caught_items + 1
+                items = items - 1
+                items_max += 1
+            else:
+                son_node_min.caught_items = son_node_min.node.caught_items
+
+            utility = valor_min(son_node_min, board, items, items_max, items_min)
+            if utility > best_utility:
+                best_action = son_node_min
+                best_utility = utility
+                print(best_utility)
+                print(items)
+
+        return best_action, 1
+
+
+def valor_min(node_min, board, items, items_max, items_min):
+        node_min = node_min
+        min_value = maxsize
+
+        if node_min.depth == 8:
+            return node_min.real_val(node_min, items, items_max, items_min)
+
+        possible_movements = node_min.possible_movements(board)
+        for i in range(len(possible_movements)):
+            pos_x, pos_y = possible_movements[i][0], possible_movements[i][1]
+            son_node_max = Node()
+            son_node_max.position_x = pos_x
+            son_node_max.position_y = pos_y
+            son_node_max.node = node_min
+            son_node_max.type = 0
+            son_node_max.depth = node_min.depth + 1
+
+            if son_node_max.is_goal(board):
+                son_node_max.value = son_node_max.real_val(items, items_max, items_min)
+                son_node_max.caught_items = son_node_max.node.caught_items + 1
+                items = items - 1
+                items_max += 1
+            else:
+                son_node_max.caught_items = son_node_max.node.caught_items
+
+            utility = valor_max(son_node_max, board, items, items_max, items_min)
+            if utility < min_value:
+                min_value = utility
+
+        return min_value
+
+
+def valor_max(node_max, board, items, items_max, items_min):
+    node_max = node_max
+    max_value = maxsize * -1
+    if node_max.depth == 8:
+        return node_max.real_val(node_max, items)
+
+    possible_movements = node_max.possible_movements(board)
+    for i in range(len(possible_movements)):
+        pos_x, pos_y = possible_movements[i][0], possible_movements[i][1]
+        son_node_min = Node()
+        son_node_min.node = node_max
+        son_node_min.position_x = pos_x
+        son_node_min.position_y = pos_y
+        son_node_min.type = 1
+        son_node_min.depth = node_max.depth + 1
+        if son_node_min.is_goal(board):
+            son_node_min.value = 40
+            son_node_min.caught_items = son_node_min.node.caught_items + 1
+            items = items - 1
+            items_max += 1
+        else:
+            son_node_min.caught_items = son_node_min.node.caught_items
+
+        utility = valor_min(son_node_min, board, items, items_max, items_min)
+
+        if utility > max_value:
+            max_value = utility
+
+    return max_value

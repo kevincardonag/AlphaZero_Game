@@ -2,7 +2,7 @@ import pygame
 import sys
 import time
 from utils.constants import WIDTH, HIGH, ROWS_NUMBER, COLUMNS_NUMBER, nodes_visited
-from utils.functions import chessboard, position_random,search_white_horse
+from utils.functions import chessboard, position_random, search_white_horse, minimax
 from models.Field import Cursor, Image
 from models.Node import Node
 from pygame.locals import *
@@ -34,12 +34,13 @@ class Main(object):
         self.white_horse = pygame.image.load("images/white_horse.png")
         self.black_horse = pygame.image.load("images/black_horse.png")
         self.coin = pygame.image.load("images/coin.png")
+        self.button = Image((WIDTH - 297) / 2, (HIGH - 192) / 2, "images/button.png")
+        self.human_items = 0
         self.cursor = Cursor()
         self.player = 0
         self.board = chessboard()
         self.node = Node()
         self.run()
-
 
     def run(self):
         """
@@ -88,9 +89,7 @@ class Main(object):
                         self.window.blit(self.square_red, (pos_y * 80, pos_x * 80))
 
             else:
-                self.window.fill(self.background_two_window)
-                button = Image((WIDTH-297)/2, (HIGH-192)/2, "images/button.png")
-                button.draw(self.window)
+                self.draw_main()
 
             # ciclo For que está escuchando los eventos
             for event in pygame.event.get():
@@ -124,7 +123,7 @@ class Main(object):
                                                                       args=(white_horse_node,))
                                             thread.start()
 
-                    if self.cursor.colliderect(button.rect) and not start:
+                    if self.cursor.colliderect(self.button.rect) and not start:
                         self.create_coin()
                         white_horse_node = self.create_white_horse()
                         self.create_black_horse()
@@ -195,10 +194,14 @@ class Main(object):
         image = Image(pos_x, pos_y, 'images/name.png')
         image.draw(self.window)
 
+    def draw_main(self):
+        self.window.fill(self.background_two_window)
+        self.button.draw(self.window)
+
     def execute_minimax(self, node):
         node_max = node
         node_min = self.node
-        best_action, turn = node.minimax(node_max, node_min, 3)
+        best_action, turn = minimax(node_max, node_min, self.board, 1)
         self.player = turn
         print(best_action)
         self.board[node.position_x][node.position_y] = '0'

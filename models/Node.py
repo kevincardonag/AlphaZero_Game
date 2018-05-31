@@ -22,9 +22,11 @@ class Node(object):
         self.depth = 0
         self.type = 0
         self.value = 0
-
         self.moves = [[2, 1], [1, 2], [-2, 1], [2, -1], [-1, 2], [1, -2], [-2, -1], [-1, -2]]
-        self.children = []
+        self.tree = []
+        self.items_in_board = 0
+        self.board = []
+        self.create_tree()
 
     def __str__(self):
         """
@@ -34,6 +36,14 @@ class Node(object):
         :return:
         """
         return "[{0}-{1}]".format(self.position_x, self.position_y)
+
+    def create_tree(self):
+        if self.depth > 0 and self.items_in_board > 0:
+            possible_movements = self.possible_movements(self.board)
+            for i in range(len(possible_movements)):
+                pos_x, pos_y = possible_movements[i][0], possible_movements[i][1]
+                self
+
 
     def possible_movements(self, chessboard):
         """
@@ -86,14 +96,22 @@ class Node(object):
         else:
             return False
 
-    def real_val(self, node_min, items):
-        if items == 0 or self.depth == 0:
-            if items == 0 and self.caught_items < node_min.caught_items:
-                return 100000000
-            return self.caught_items - node_min.caught_items
-        elif self.type:
-            return maxsize * -1
-        return maxsize
+    def real_val(self, items, items_max, items_min):
+        """value = 0
+        if node_min.caught_items > self.caught_items:
+            value = self.caught_items - node_min.caught_items * -1
+        elif node_min.caught_items < self.caught_items :
+            value = self.caught_items - node_min.caught_items
+        return value"""
+        value = 0
+        if self.depth == 8 and items > 0:
+            value = items_max - items_min
+        elif items == 0:
+            if self.type:
+                value = 40
+            else:
+                value = -40
+        return value
 
     def is_goal(self, board):
         field = board[self.position_x][self.position_y]
@@ -114,7 +132,7 @@ class Node(object):
         """
         items = items
         best_action = None
-        best_utility = maxsize * -1
+        best_utility = -1
         node_max = node_max
         node_min = node_min
         possible_moviments = node_min.possible_movements(board)
@@ -126,11 +144,13 @@ class Node(object):
             son_node_min.type = 1
             son_node_min.node = node_min
             son_node_min.depth = node_max.depth + 1
-            if son_node_min.is_goal(board):
-                son_node_min.caught_items = son_node_min.node.caught_items + 1
-                items = items - 1
-            else:
-                son_node_min.caught_items = son_node_min.node.caught_items
+
+            if son_node_min.caught_items < items:
+                if son_node_min.is_goal(board):
+                    son_node_min.caught_items = son_node_min.node.caught_items + 1
+                    items = items - 1
+                else:
+                    son_node_min.caught_items = son_node_min.node.caught_items
 
             utility = son_node_min.valor_min(node_max, son_node_min, board, items)
             if utility > best_utility:
@@ -157,12 +177,12 @@ class Node(object):
             son_node_max.node = node_max
             son_node_max.type = 0
             son_node_max.depth = node_min.depth + 1
-
-            if son_node_max.is_goal(board):
-                son_node_max.caught_items = son_node_max.node.caught_items + 1
-                items = items - 1
-            else:
-                son_node_max.caught_items = son_node_max.node.caught_items
+            if son_node_max.caught_items < items:
+                if son_node_max.is_goal(board):
+                    son_node_max.caught_items = son_node_max.node.caught_items + 1
+                    items = items - 1
+                else:
+                    son_node_max.caught_items = son_node_max.node.caught_items
 
             utility = son_node_max.valor_max(node_min, son_node_max, board, items)
             if utility < min_value:
@@ -184,6 +204,13 @@ class Node(object):
             son_node_min.position_y = pos_y
             son_node_min.type = 1
             son_node_min.depth = node_max.depth + 1
+            if son_node_min.caught_items < items:
+                if son_node_min.is_goal(board):
+                    son_node_min.caught_items = son_node_min.node.caught_items + 1
+                    items = items - 1
+                else:
+                    son_node_min.caught_items = son_node_min.node.caught_items
+
             utility = son_node_min.valor_min(node_max, son_node_min, board, items)
             if utility > max_value:
                 max_value = utility
