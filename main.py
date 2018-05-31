@@ -36,6 +36,7 @@ class Main(object):
         self.coin = pygame.image.load("images/coin.png")
         self.button = Image((WIDTH - 297) / 2, (HIGH - 192) / 2, "images/button.png")
         self.human_items = 0
+        self.machine_items = 0
         self.cursor = Cursor()
         self.player = 0
         self.board = chessboard()
@@ -112,6 +113,9 @@ class Main(object):
 
                                 if position_x == position_list_x and position_y == position_list_y:
                                     if self.player:
+                                        if self.board[position_x][position_y] == 'C':
+                                            self.human_items += 1
+
                                         self.board[position_x][position_y] = 'B'
                                         self.board[self.node.position_x][self.node.position_y] = '0'
                                         self.node.position_x = position_x
@@ -120,14 +124,17 @@ class Main(object):
                                         if not self.player:
                                             white_horse_node = search_white_horse(self.board)
                                             thread = threading.Thread(target=self.execute_minimax,
-                                                                      args=(white_horse_node,))
+                                                                      args=(white_horse_node, self.machine_items,
+                                                                            self.human_items,))
                                             thread.start()
 
                     if self.cursor.colliderect(self.button.rect) and not start:
-                        self.create_coin()
+                        #self.create_coin()
                         white_horse_node = self.create_white_horse()
                         self.create_black_horse()
-                        thread = threading.Thread(target=self.execute_minimax, args=(white_horse_node,))
+                        thread = threading.Thread(target=self.execute_minimax, args=(white_horse_node,
+                                                                                     self.machine_items,
+                                                                                     self.human_items,))
                         thread.start()
                         start = True
 
@@ -198,12 +205,15 @@ class Main(object):
         self.window.fill(self.background_two_window)
         self.button.draw(self.window)
 
-    def execute_minimax(self, node):
+    def execute_minimax(self, node, items_machine, items_human):
         node_max = node
         node_min = self.node
-        best_action, turn = minimax(node_max, node_min, self.board, 1)
+        best_action, turn = minimax(node_max, self.board, 1, items_machine, items_human)
         self.player = turn
         print(best_action)
+        if self.board[best_action.position_x][best_action.position_y] == 'C':
+            self.machine_items += 1
+
         self.board[node.position_x][node.position_y] = '0'
         self.board[best_action.position_x][best_action.position_y] = 'W'
 

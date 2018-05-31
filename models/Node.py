@@ -104,8 +104,9 @@ class Node(object):
             value = self.caught_items - node_min.caught_items
         return value"""
         value = 0
-        if self.depth == 8 and items > 0:
+        if items > 0:
             value = items_max - items_min
+            print("entro papu")
         elif items == 0:
             if self.type:
                 value = 40
@@ -132,7 +133,7 @@ class Node(object):
         """
         items = items
         best_action = None
-        best_utility = -1
+        best_utility = -maxsize
         node_max = node_max
         node_min = node_min
         possible_moviments = node_min.possible_movements(board)
@@ -148,9 +149,12 @@ class Node(object):
             if son_node_min.caught_items < items:
                 if son_node_min.is_goal(board):
                     son_node_min.caught_items = son_node_min.node.caught_items + 1
+                    _min += 1
                     items = items - 1
                 else:
                     son_node_min.caught_items = son_node_min.node.caught_items
+
+                print("items min: "+str(item))
 
             utility = son_node_min.valor_min(node_max, son_node_min, board, items)
             if utility > best_utility:
@@ -163,7 +167,7 @@ class Node(object):
 
     def valor_min(self, node_max, node_min, board, items):
         node_max = node_max
-        min_value = maxsize
+        min_value = node_max.value
 
         if node_min.depth == 8:
             return node_max.real_val(node_min, items)
@@ -191,8 +195,8 @@ class Node(object):
 
     def valor_max(self, node_min, node_max, board, items):
         node_min = node_min
-        max_value = maxsize * -1
-        if node_max.depth == 8 or not items:
+        max_value = node_min.value
+        if node_max.depth == 8:
             return node_max.real_val(node_min, items)
 
         possible_moviments = node_min.possible_movements(board)

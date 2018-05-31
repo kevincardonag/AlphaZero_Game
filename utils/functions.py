@@ -85,7 +85,7 @@ def tree(node, board):
     return False, next_node
 
 
-def minimax(node_max, node_min, board, items):
+def minimax(node_max, board, items, items_machine, items_human):
         """
         Autor: Carlos Almario
         Fecha: Mayo 26 2018
@@ -98,10 +98,10 @@ def minimax(node_max, node_min, board, items):
         """
         items = items
         best_action = None
-        best_utility = maxsize * -1
+        best_utility = -maxsize
         node_max = node_max
-        items_max = 0
-        items_min = 0
+        items_max = items_machine
+        items_min = items_human
         possible_movements = node_max.possible_movements(board)
         for i in range(len(possible_movements)):
             pos_x, pos_y = possible_movements[i][0], possible_movements[i][1]
@@ -111,31 +111,35 @@ def minimax(node_max, node_min, board, items):
             son_node_min.type = 1
             son_node_min.node = node_max
             son_node_min.depth = node_max.depth + 1
-
             if son_node_min.is_goal(board):
-                son_node_min.value = 40
                 son_node_min.caught_items = son_node_min.node.caught_items + 1
                 items = items - 1
-                items_max += 1
+                items_min += 1
             else:
                 son_node_min.caught_items = son_node_min.node.caught_items
 
+            #son_node_min.value = son_node_min.real_val(items, items_max, items_min)
+
+            #print(str(son_node_min)+" Valor: "+str(son_node_min.value)+" tipo: "+str(son_node_min.type)+"items: "+str(items)+"padre: "+str(son_node_min.node))
             utility = valor_min(son_node_min, board, items, items_max, items_min)
+
             if utility > best_utility:
                 best_action = son_node_min
                 best_utility = utility
-                print(best_utility)
-                print(items)
+                print("mejor utilidad: "+str(best_utility))
+                print("items: "+str(items))
+                print("items min: " + str(items_min))
+                print("items max: " + str(items_max))
+                print("items: " + str(items))
 
-        return best_action, 1
+            return best_action, 1
 
 
 def valor_min(node_min, board, items, items_max, items_min):
         node_min = node_min
         min_value = maxsize
-
-        if node_min.depth == 8:
-            return node_min.real_val(node_min, items, items_max, items_min)
+        if node_min.depth == 4:
+            return node_min.real_val(items, items_max, items_min)
 
         possible_movements = node_min.possible_movements(board)
         for i in range(len(possible_movements)):
@@ -146,16 +150,19 @@ def valor_min(node_min, board, items, items_max, items_min):
             son_node_max.node = node_min
             son_node_max.type = 0
             son_node_max.depth = node_min.depth + 1
-
             if son_node_max.is_goal(board):
-                son_node_max.value = son_node_max.real_val(items, items_max, items_min)
                 son_node_max.caught_items = son_node_max.node.caught_items + 1
                 items = items - 1
                 items_max += 1
             else:
                 son_node_max.caught_items = son_node_max.node.caught_items
 
+            #son_node_max.value = son_node_max.real_val(items, items_max, items_min)
+
+            #print(str(son_node_max)+" Valor: "+str(son_node_max.value) + " tipo: " + str(son_node_max.type)+"items: "+str(items)+"padre: "+str(son_node_max.node))
+
             utility = valor_max(son_node_max, board, items, items_max, items_min)
+
             if utility < min_value:
                 min_value = utility
 
@@ -164,9 +171,10 @@ def valor_min(node_min, board, items, items_max, items_min):
 
 def valor_max(node_max, board, items, items_max, items_min):
     node_max = node_max
-    max_value = maxsize * -1
-    if node_max.depth == 8:
-        return node_max.real_val(node_max, items)
+    max_value = -maxsize
+    if node_max.depth == 4:
+
+        return node_max.real_val(items, items_max, items_min)
 
     possible_movements = node_max.possible_movements(board)
     for i in range(len(possible_movements)):
@@ -178,16 +186,19 @@ def valor_max(node_max, board, items, items_max, items_min):
         son_node_min.type = 1
         son_node_min.depth = node_max.depth + 1
         if son_node_min.is_goal(board):
-            son_node_min.value = 40
             son_node_min.caught_items = son_node_min.node.caught_items + 1
             items = items - 1
-            items_max += 1
+            items_min += 1
         else:
             son_node_min.caught_items = son_node_min.node.caught_items
+        son_node_min.value = son_node_min.real_val(items, items_max, items_min)
+        if son_node_min.depth == 4:
+            utility = valor_min(son_node_min, board, items, items_max, items_min)
 
-        utility = valor_min(son_node_min, board, items, items_max, items_min)
+        #print(str(son_node_min)+" Valor: "+str(son_node_min.value) + " tipo: " + str(son_node_min.type)+" items: "+str(items)+" padre: "+str(son_node_min.node))
 
         if utility > max_value:
             max_value = utility
 
     return max_value
+
