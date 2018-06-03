@@ -33,10 +33,14 @@ class Main(object):
         self.square_red = pygame.image.load("images/red.png")
         self.white_horse = pygame.image.load("images/white_horse.png")
         self.black_horse = pygame.image.load("images/black_horse.png")
+        self.font = pygame.font.SysFont("images/SuperMario256.ttf", 20)
         self.coin = pygame.image.load("images/coin.png")
         self.button = Image((WIDTH - 297) / 2, (HIGH - 192) / 2, "images/button.png")
+        self.text_thinking = ""
         self.human_items = 0
         self.machine_items = 0
+        self.items = 3
+        self.game_over_ = False
         self.cursor = Cursor()
         self.player = 0
         self.board = chessboard()
@@ -53,23 +57,23 @@ class Main(object):
         tablero
         """
 
-        c = 0
-
         start = False
         while True:
 
             pygame.display.update()
             self.cursor.update()
-            # condición para pintar el tablero
-            if start:
-                self.window.fill(self.background_window)
-                self.rewrite()
 
+            # condición para pintar el tablero
+            if start and not self.game_over_:
+                self.window.fill(self.background_window)
+                self.draw_text_right()
+                self.rewrite()
                 possible_movimenents = self.node.possible_movements(self.board)
 
+                # ciclo que pinta la matriz del juego
                 for i in range(len(self.board)):
                     for j in range(len(self.board)):
-
+                        # condicion para pintar los recuadros blanco y negro
                         if (i+j) % 2 != 0:
                             self.window.blit(self.square_black, (j*80,i*80))
                         else:
@@ -83,14 +87,16 @@ class Main(object):
 
                         if self.board[i][j] == 'C':
                             self.window.blit(self.coin, (j * 86, i * 80))
-
+                # pinta de color verde los posibes movimientos del usuario
                 for i in range(len(possible_movimenents)):
                     pos_x, pos_y = possible_movimenents[i][0], possible_movimenents[i][1]
                     if self.board[pos_x][pos_y] != 'C':
                         self.window.blit(self.square_red, (pos_y * 80, pos_x * 80))
 
-            else:
+            elif not self.game_over_:
                 self.draw_main()
+            else:
+                self.game_over()
 
             # ciclo For que está escuchando los eventos
             for event in pygame.event.get():
@@ -110,33 +116,50 @@ class Main(object):
                             for i in range(len(possible_movimenents)):
                                 position_list_x = possible_movimenents[i][0]
                                 position_list_y = possible_movimenents[i][1]
-
+                                # condicion  que examina las posiciones de los clicks
                                 if position_x == position_list_x and position_y == position_list_y:
+                                    #condicion que examina si el turno es para el usuario
                                     if self.player:
                                         if self.board[position_x][position_y] == 'C':
                                             self.human_items += 1
+                                            self.items -= 1
+                                            if self.items == 0:
+                                                self.game_over_ = True
 
                                         self.board[position_x][position_y] = 'B'
                                         self.board[self.node.position_x][self.node.position_y] = '0'
                                         self.node.position_x = position_x
                                         self.node.position_y = position_y
                                         self.player = 0
+                                        # condicion que examina si es el turno de la  maquina
                                         if not self.player:
                                             white_horse_node = search_white_horse(self.board)
-                                            thread = threading.Thread(target=self.execute_minimax,
-                                                                      args=(white_horse_node, self.machine_items,
-                                                                            self.human_items,))
+                                            thread = threading.Thread(
+                                                                    target=self.execute_minimax,
+                                                                    args=(
+                                                                            white_horse_node, self.items,
+                                                                            self.machine_items,
+                                                                            self.human_items,
+                                                                        )
+                                                                    )
                                             thread.start()
-
-                    if self.cursor.colliderect(self.button.rect) and not start:
+                    # condiicón de inicio del juego
+                    if self.cursor.colliderect(self.button.rect) and not start and not self.game_over_:
                         #self.create_coin()
                         white_horse_node = self.create_white_horse()
                         self.create_black_horse()
-                        thread = threading.Thread(target=self.execute_minimax, args=(white_horse_node,
-                                                                                     self.machine_items,
-                                                                                     self.human_items,))
+                        thread = threading.Thread(
+                            target=self.execute_minimax,
+                            args=(
+                                white_horse_node, self.items,
+                                self.machine_items,
+                                self.human_items,
+                            )
+                        )
                         thread.start()
                         start = True
+                    elif self.game_over_:
+                        self.game_over()
 
                 if event.type == QUIT:
                     pygame.quit()
@@ -149,7 +172,6 @@ class Main(object):
         método encargado de crear el caballo blanco en la matriz
         """
         # ubicacion del caballo blanco
-
         ramdom_x, ramdom_y = position_random(ROWS_NUMBER, COLUMNS_NUMBER)
         if not self.board[ramdom_x][ramdom_y].strip('0'):
             node = Node()
@@ -158,8 +180,9 @@ class Main(object):
             node.position_x = ramdom_x
             node.position_y = ramdom_y
             self.board[ramdom_x][ramdom_y] = 'W'
-            print("nodo padre: "+str(node)+"\n")
             return node
+        else:
+            self.create_white_horse()
 
     def create_black_horse(self):
         """
@@ -176,6 +199,8 @@ class Main(object):
             self.node.position_x = ramdom_x
             self.node.position_y = ramdom_y
             self.board[ramdom_x][ramdom_y] = 'B'
+        else:
+            self.create_black_horse()
 
     def create_coin(self):
         """
@@ -202,20 +227,92 @@ class Main(object):
         image.draw(self.window)
 
     def draw_main(self):
+        """
+        Autor: Carlos Almario
+        Fecha: junio 02 2018
+
+        Metodo encargado de pintar la pantalla de inicio del juego
+        :return:
+        """
         self.window.fill(self.background_two_window)
         self.button.draw(self.window)
 
-    def execute_minimax(self, node, items_machine, items_human):
-        node_max = node
-        node_min = self.node
-        best_action, turn = minimax(node_max, self.board, 1, items_machine, items_human)
-        self.player = turn
-        print(best_action)
-        if self.board[best_action.position_x][best_action.position_y] == 'C':
-            self.machine_items += 1
+    def draw_text_right(self):
+        """
+        Autor: Carlos Almario
+        Fecha: Junio 02 2018
 
-        self.board[node.position_x][node.position_y] = '0'
-        self.board[best_action.position_x][best_action.position_y] = 'W'
+        Metodo que pinta el texto de la derecha de l pantalla de juego dode se encuentran los puntajes
+        :return:
+        """
+        score_human = self.create_text("PUNTAJE USUARIO:  " + str(self.human_items), 0, 0, 0)
+        score_machine = self.create_text("PUNTAJE MAQUINA:  " + str(self.machine_items), 0, 0, 0)
+        text_items_in_board = self.create_text("TOTAL MONEDAS EN JUEGO: "+str(self.items), 0, 0, 0)
+        text = self.font.render(self.text_thinking, 0, (0, 0, 0))
+
+        self.window.blit(text, ((len(self.board) * 78) + 14, HIGH - 40))
+        self.window.blit(text_items_in_board, ((len(self.board) * 80) + 14, 50))
+        self.window.blit(score_human, ((len(self.board) * 78) + 14, 90))
+        self.window.blit(score_machine, ((len(self.board) * 78) + 14, 130))
+
+    def game_over(self):
+        """
+        Autor: Carlos Almario
+        Fecha: Junio 02 2018
+        Metodo que pinta la panatalla de juego de terminado
+        :return:
+        """
+        self.window.fill(self.background_two_window)
+        winner = ""
+        if self.items == 0 and self.human_items > self.machine_items:
+            winner = "GANASTE"
+        elif self.items == 0 and self.human_items < self.machine_items:
+            winner = "PERDISTE BUENA SUERTE EN LA PROXIMA"
+        game_over = self.create_text("EL JUEGO TERMINÓ "+ winner, 0, 0, 0)
+
+        self.window.blit(game_over, (140, HIGH/2))
+
+    def create_text(self, text, r, g, b):
+        """
+            Autor: Carlos Almario
+            Fecha: junio 02 2018
+            Método para crear el texto que va se va a mostrar en la pantalla del proyecto
+            :return:
+        """
+
+        return self.font.render(text, 0, (r, g, b))
+
+    def execute_minimax(self, node, items, items_machine, items_human):
+        """
+        Autor:
+        Fecha:
+
+        Metodo que ejecuta el algoritmo minimax mediante un hilo de ejecución
+        :param node: estado inicial del juego
+        :param items: numro de items en juego
+        :param items_machine: items que posee la maquina en el momento
+        :param items_human: items que posee el usuario en el momento
+        :return:
+        """
+        if self.items == 0:
+            self.game_over_ = True
+        node_max = node
+        self.text_thinking = "REALIZANDO CALCULOS..."
+        best_action, turn = node_max.minimax(node_max, self.board, items, items_machine, items_human)
+        self.player = turn
+        # condicion que evalua si la acción retornada no es None o vacia
+        if best_action is not None:
+            # condición si en esa posicion de la mejor acción hay una moneda y capturarla y se descuentan los items en juego
+            if self.board[best_action.position_x][best_action.position_y] == 'C':
+                self.machine_items += 1
+                self.items -= 1
+            self.board[node.position_x][node.position_y] = '0'
+            self.board[best_action.position_x][best_action.position_y] = 'W'
+            self.text_thinking = ""
+
+        else:
+            print("algo salio mal y no encontro la mejor opción de juego")
+            self.text_thinking = ""
 
 
 main_window = Main()

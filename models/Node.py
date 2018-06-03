@@ -20,13 +20,14 @@ class Node(object):
         self.position_y = 0
         self.caught_items = 0
         self.depth = 0
-        self.type = 0
+        self.type = -1
         self.value = 0
+        self.items_min = 0
+        self.items_max = 0
         self.moves = [[2, 1], [1, 2], [-2, 1], [2, -1], [-1, 2], [1, -2], [-2, -1], [-1, -2]]
         self.tree = []
         self.items_in_board = 0
         self.board = []
-        self.create_tree()
 
     def __str__(self):
         """
@@ -37,16 +38,10 @@ class Node(object):
         """
         return "[{0}-{1}]".format(self.position_x, self.position_y)
 
-    def create_tree(self):
-        if self.depth > 0 and self.items_in_board > 0:
-            possible_movements = self.possible_movements(self.board)
-            for i in range(len(possible_movements)):
-                pos_x, pos_y = possible_movements[i][0], possible_movements[i][1]
-                self
-
-
     def possible_movements(self, chessboard):
         """
+        Autor: Carlos Almario
+        Fecha: 2 junio 2018
         Funcion que calculo los posibes movimientos que tiene el nodo
         :param chessboard:
         :return: movements_possible, Lista con los movimientos posibles de una ficha
@@ -64,167 +59,173 @@ class Node(object):
 
         return movements_possible
 
-    def in_list(self, list):
-        """
-            Autor: Carlos Almario
-            Fecha: Mayo 26 2018
-            metodo para mirar si el nodo esta en una lista determinada
-            :param list: lista de nodos en la cual se va a buscar
-            :return: in_list, variable booleana que indica si está o no o el nodo en la lista
-        """
-        in_list = False
-
-        for n in list:
-            if self.is_equal(n):
-                in_list = True
-
-        return in_list
-
-    def is_equal(self, other):
-        """
-            Autor: Carlos Almario
-            Fecha: Mayo 26 2018
-            metodo para comparar el estado de Mario
-            :param other: Nodo con el cual se va a comparar
-            :return: bool,
-        """
-        if other is None:
-            return False
-
-        if self.position_x == other.position_x and self.position_y == other.position_y and self.type == other.type:
-            return True
-        else:
-            return False
-
     def real_val(self, items, items_max, items_min):
-        """value = 0
-        if node_min.caught_items > self.caught_items:
-            value = self.caught_items - node_min.caught_items * -1
-        elif node_min.caught_items < self.caught_items :
-            value = self.caught_items - node_min.caught_items
-        return value"""
-        value = 0
-        if items > 0:
+        """
+        Autor: Carlos Almario
+        Fecha: 2 junio 2018
+        Metodo que calcula la utilidad de los nodos para efectuar la mejor opcion del algoritmo minimax
+
+        :param items:
+        :param items_max:
+        :param items_min:
+        :return: value:  valor de la utilidad que llevara el nodo
+        """
+        value = maxsize
+        if items == 0 and self.depth == 8:
             value = items_max - items_min
-            print("entro papu")
-        elif items == 0:
-            if self.type:
-                value = 40
-            else:
-                value = -40
+        elif items > 0 and self.depth == 8:
+            value = items_max - items_min
+        elif items == 0 and not self.depth == 8:
+            value = 10000000000
+
         return value
 
     def is_goal(self, board):
+        """
+        Autor: Carlos Almario
+        Fecha: 2 junio 2018
+
+        Metodo que se encarga de responder si en una posicion determinada hay una moneda ('C', coin)
+        :param board: tablero de juego
+        :return: boolean: variable booleana si existe o no una moneda
+        """
         field = board[self.position_x][self.position_y]
         if field == 'C':
             return True
         return False
 
-    def minimax(self, node_max, node_min, board, items):
+    def minimax(self, node_max, board, items, items_max, items_min):
         """
         Autor: Carlos Almario
-        Fecha: Mayo 26 2018
-        metodo
-        :param node_max:
-        :param node_min:
-        :param board:
-        :param items:
-        :return:
+        Fecha: 2 junio 2018
+
+        Metodo minimax que efectua la mejor opción de juego para la maquina con profundidad 8, este metodo construye
+        el arbol por profundidad y o explora de esa  manera, solo retorna la mejor accion cuando ha explorado
+        todo el arbol
+        :param node_max: estado inicial del juego
+        :param board: tablero de juego donde se encuentran las monedas  y las fichas ('W', ficha blanca), ('B', ficha negra)
+        :param items: número de items que hay en el tablero
+        :param items_max: numero de items que tiene la maquina hasta el momento
+        :param items_min: número de items que tiene el usuario hasta el momento
+        :return: best_action: nodo que es la mejor accion del juego, 1 numero que idica el turno de juego
         """
-        items = items
+        self.items_in_board = items
+        self.items_max = items_max
+        self.items_min = items_min
         best_action = None
         best_utility = -maxsize
         node_max = node_max
-        node_min = node_min
-        possible_moviments = node_min.possible_movements(board)
+        possible_moviments = node_max.possible_movements(board)
+        # ciclo que recorreo las posibles acciones de ese estado
         for i in range(len(possible_moviments)):
             pos_x, pos_y = possible_moviments[i][0], possible_moviments[i][1]
             son_node_min = Node()
             son_node_min.position_x = pos_x
             son_node_min.position_y = pos_y
             son_node_min.type = 1
-            son_node_min.node = node_min
+            son_node_min.node = node_max
             son_node_min.depth = node_max.depth + 1
 
-            if son_node_min.caught_items < items:
-                if son_node_min.is_goal(board):
-                    son_node_min.caught_items = son_node_min.node.caught_items + 1
-                    _min += 1
-                    items = items - 1
-                else:
-                    son_node_min.caught_items = son_node_min.node.caught_items
+            if son_node_min.is_goal(board):
+                self.items_min += 1
+                if self.items_in_board > 0:
+                    self.items_in_board -= 1
+            # asignación del valor al nodo
+            son_node_min.value = self.real_val(self.items_in_board, self.items_max, self.items_min)
+            utility = son_node_min.valor_min(son_node_min, board, self.items_in_board, self.items_max, self.items_min)
 
-                print("items min: "+str(item))
-
-            utility = son_node_min.valor_min(node_max, son_node_min, board, items)
             if utility > best_utility:
                 best_action = son_node_min
                 best_utility = utility
-                print(best_utility)
-                print(items)
 
         return best_action, 1
 
-    def valor_min(self, node_max, node_min, board, items):
-        node_max = node_max
-        min_value = node_max.value
+    def valor_min(self, node_min, board, items, items_max, items_min):
+        """
+        Autor: Carlos Almario
+        Fecha: 2 junio 2018
 
+        Metodo que busca el valor minimo en el arbol
+
+        :param node_min: estado min del arbol
+        :param board: tablero de juego
+        :param items: numero de items en juego
+        :param items_max: numero de items que tiene la maquina
+        :param items_min: numero de items que tiene min
+        :return: min_value: valor minimo
+        """
+        node_min = node_min
+        min_value = maxsize
+        self.items_min = items_min
+        self.items_max = items_max
+        self.items_in_board = items
         if node_min.depth == 8:
-            return node_max.real_val(node_min, items)
+            return node_min.value * self.type
 
-        possible_moviments = node_max.possible_movements(board)
+        possible_moviments = node_min.possible_movements(board)
+        # ciclo que recorreo las posibles acciones de ese estado
         for i in range(len(possible_moviments)):
             pos_x, pos_y = possible_moviments[i][0], possible_moviments[i][1]
             son_node_max = Node()
             son_node_max.position_x = pos_x
             son_node_max.position_y = pos_y
-            son_node_max.node = node_max
-            son_node_max.type = 0
+            son_node_max.node = node_min
+            son_node_max.type = -1
             son_node_max.depth = node_min.depth + 1
-            if son_node_max.caught_items < items:
-                if son_node_max.is_goal(board):
-                    son_node_max.caught_items = son_node_max.node.caught_items + 1
-                    items = items - 1
-                else:
-                    son_node_max.caught_items = son_node_max.node.caught_items
 
-            utility = son_node_max.valor_max(node_min, son_node_max, board, items)
+            if son_node_max.is_goal(board):
+                self.items_max += 1
+                if self.items_in_board > 0:
+                    self.items_in_board -= 1
+            # asignación del valor al nodo
+            son_node_max.value = self.real_val(self.items_in_board, self.items_max, self.items_min)
+            utility = son_node_max.valor_max(son_node_max, board, self.items_in_board, self.items_max, self.items_min)
+
             if utility < min_value:
                 min_value = utility
+
         return min_value
 
-    def valor_max(self, node_min, node_max, board, items):
-        node_min = node_min
-        max_value = node_min.value
-        if node_max.depth == 8:
-            return node_max.real_val(node_min, items)
+    def valor_max(self, node_max, board, items, items_max, items_min):
+        """
+        Autor: Carlos Almario
+        Fecha: 2 junio 2018
 
-        possible_moviments = node_min.possible_movements(board)
+        Metodo que explora el mejor valor es decir MAX
+        :param node_max: estado max del arbol, para miras los posibles movimientos
+        :param board: tablero de juego
+        :param items: items en juego
+        :param items_max: items que posee MAX en el momento
+        :param items_min: items que tiene MIN en el momento
+        :return: max_value:  mejor valor
+        """
+        node_max = node_max
+        max_value = -maxsize
+        self.items_min = items_min
+        self.items_max = items_max
+        self.items_in_board = items
+        if node_max.depth == 8:
+            return node_max.value * self.type
+        possible_moviments = node_max.possible_movements(board)
+        # ciclo que recorreo las posibles acciones de ese estado
         for i in range(len(possible_moviments)):
             pos_x, pos_y = possible_moviments[i][0], possible_moviments[i][1]
             son_node_min = Node()
-            son_node_min.node = node_min
+            son_node_min.node = node_max
             son_node_min.position_x = pos_x
             son_node_min.position_y = pos_y
             son_node_min.type = 1
             son_node_min.depth = node_max.depth + 1
-            if son_node_min.caught_items < items:
-                if son_node_min.is_goal(board):
-                    son_node_min.caught_items = son_node_min.node.caught_items + 1
-                    items = items - 1
-                else:
-                    son_node_min.caught_items = son_node_min.node.caught_items
+            if son_node_min.is_goal(board):
+                self.items_min += 1
+                if self.items_in_board > 0:
+                    self.items_in_board -= 1
+            # asignación del valor al nodo
+            son_node_min.value = self.real_val(self.items_in_board, self.items_max, self.items_min)
+            utility = son_node_min.valor_min(son_node_min, board,self.items_in_board, self.items_max, self.items_min)
 
-            utility = son_node_min.valor_min(node_max, son_node_min, board, items)
             if utility > max_value:
                 max_value = utility
 
         return max_value
 
-    def number_items(self, board):
-        items = 0
-        for i in range(len(board)):
-            for j in range(len(board)):
-                if board[i][j].strip('C'):
-                    items += 1
-        return items
