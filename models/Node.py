@@ -70,15 +70,11 @@ class Node(object):
         :param items_min:
         :return: value:  valor de la utilidad que llevara el nodo
         """
-        value = maxsize
-        if items == 0 and self.depth == 8:
-            value = items_max - items_min
-        elif items > 0 and self.depth == 8:
-            value = items_max - items_min
-        elif items == 0 and not self.depth == 8:
-            value = 10000000000
-
-        return value
+        if items == 0 or self.depth == 8:
+            if items == 0 and items_max < items_min:
+                return 1000000000
+            return items_max - items_min
+        return maxsize
 
     def is_goal(self, board):
         """
@@ -130,11 +126,12 @@ class Node(object):
                 self.items_min += 1
                 if self.items_in_board > 0:
                     self.items_in_board -= 1
-            # asignación del valor al nodo
             son_node_min.value = self.real_val(self.items_in_board, self.items_max, self.items_min)
-            utility = son_node_min.valor_min(son_node_min, board, self.items_in_board, self.items_max, self.items_min)
+            # asignación del valor al nodo
 
-            if utility > best_utility:
+            utility = son_node_min.valor_min(son_node_min, board, self.items_in_board, self.items_max, self.items_min)
+            if utility >= best_utility:
+                print(utility)
                 best_action = son_node_min
                 best_utility = utility
 
@@ -159,8 +156,8 @@ class Node(object):
         self.items_min = items_min
         self.items_max = items_max
         self.items_in_board = items
-        if node_min.depth == 8:
-            return node_min.value * self.type
+        if node_min.depth == 8 or (abs(node_min.value) != maxsize):
+            return node_min.value * node_min.type
 
         possible_moviments = node_min.possible_movements(board)
         # ciclo que recorreo las posibles acciones de ese estado
@@ -177,10 +174,10 @@ class Node(object):
                 self.items_max += 1
                 if self.items_in_board > 0:
                     self.items_in_board -= 1
-            # asignación del valor al nodo
-            son_node_max.value = self.real_val(self.items_in_board, self.items_max, self.items_min)
-            utility = son_node_max.valor_max(son_node_max, board, self.items_in_board, self.items_max, self.items_min)
 
+            son_node_max.value = self.real_val(self.items_in_board, self.items_max, self.items_min)
+            # asignación del valor al nodo
+            utility = son_node_max.valor_max(son_node_max, board, self.items_in_board, self.items_max, self.items_min)
             if utility < min_value:
                 min_value = utility
 
@@ -204,8 +201,8 @@ class Node(object):
         self.items_min = items_min
         self.items_max = items_max
         self.items_in_board = items
-        if node_max.depth == 8:
-            return node_max.value * self.type
+        if node_max.depth == 8 or (abs(node_max.value) != maxsize):
+            return node_max.value * node_max.type
         possible_moviments = node_max.possible_movements(board)
         # ciclo que recorreo las posibles acciones de ese estado
         for i in range(len(possible_moviments)):
@@ -220,10 +217,9 @@ class Node(object):
                 self.items_min += 1
                 if self.items_in_board > 0:
                     self.items_in_board -= 1
-            # asignación del valor al nodo
             son_node_min.value = self.real_val(self.items_in_board, self.items_max, self.items_min)
-            utility = son_node_min.valor_min(son_node_min, board,self.items_in_board, self.items_max, self.items_min)
 
+            utility = son_node_min.valor_min(son_node_min, board, self.items_in_board, self.items_max, self.items_min)
             if utility > max_value:
                 max_value = utility
 

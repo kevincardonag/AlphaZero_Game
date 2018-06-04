@@ -118,7 +118,7 @@ class Main(object):
                                 position_list_y = possible_movimenents[i][1]
                                 # condicion  que examina las posiciones de los clicks
                                 if position_x == position_list_x and position_y == position_list_y:
-                                    #condicion que examina si el turno es para el usuario
+                                    # condicion que examina si el turno es para el usuario
                                     if self.player:
                                         if self.board[position_x][position_y] == 'C':
                                             self.human_items += 1
@@ -173,12 +173,14 @@ class Main(object):
         """
         # ubicacion del caballo blanco
         ramdom_x, ramdom_y = position_random(ROWS_NUMBER, COLUMNS_NUMBER)
+
         if not self.board[ramdom_x][ramdom_y].strip('0'):
             node = Node()
             node.type = 0
             node.node = None
             node.position_x = ramdom_x
             node.position_y = ramdom_y
+            node.board = self.board
             self.board[ramdom_x][ramdom_y] = 'W'
             return node
         else:
@@ -270,7 +272,7 @@ class Main(object):
             winner = "PERDISTE BUENA SUERTE EN LA PROXIMA"
         game_over = self.create_text("EL JUEGO TERMINÓ "+ winner, 0, 0, 0)
 
-        self.window.blit(game_over, (140, HIGH/2))
+        self.window.blit(game_over, (140, (HIGH/2)-100))
 
     def create_text(self, text, r, g, b):
         """
