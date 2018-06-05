@@ -1,7 +1,7 @@
 import pygame
 import sys
 import time
-from utils.constants import WIDTH, HIGH, ROWS_NUMBER, COLUMNS_NUMBER, nodes_visited
+from utils.constants import WIDTH, HIGH, ROWS_NUMBER , COLUMNS_NUMBER , nodes_visited
 from utils.functions import chessboard, position_random, search_white_horse, minimax
 from models.Field import Cursor, Image
 from models.Node import Node
@@ -39,13 +39,21 @@ class Main(object):
         self.text_thinking = ""
         self.human_items = 0
         self.machine_items = 0
-        self.items = 3
+        self.items = self.impar()
         self.game_over_ = False
         self.cursor = Cursor()
         self.player = 0
-        self.board = chessboard()
+        self.board = chessboard(self.items)
         self.node = Node()
         self.run()
+
+    def impar(self):
+        item = int(input("Por favor ingrese el número de items: "))
+        if item % 2 == 0:
+            print("Por favor ingrese un número impar")
+            self.impar()
+        else:
+            return item
 
     def run(self):
         """
@@ -164,6 +172,7 @@ class Main(object):
                 if event.type == QUIT:
                     pygame.quit()
                     sys.exit()
+
 
     def create_white_horse(self):
         """

@@ -1,16 +1,42 @@
-from utils.constants import CHESSBOARD, tree_development, nodes_visited
+from utils.constants import tree_development, nodes_visited
 from models.Node import Node
 from random import randint
 from sys import maxsize
 
 
-def chessboard():
+def chessboard(items):
     """
     Autor: Carlos Almario
     Fecha: mayo 24 2018
 
     :return: CHESSBOARD, Tablero en limpio para comenzar las partidas
     """
+
+    CHESSBOARD = [
+
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+        ['0', '0', '0', '0', '0', '0'],
+
+    ]
+    count = 0
+
+    while True:
+        ramdom_x = randint(0, 5)
+        ramdom_y = randint(0, 5)
+
+        if CHESSBOARD[ramdom_x][ramdom_y] == 'C':
+            continue
+        else:
+            CHESSBOARD[ramdom_x][ramdom_y] = 'C'
+            count += 1
+
+        if count == items:
+            break
+
     return CHESSBOARD
 
 
